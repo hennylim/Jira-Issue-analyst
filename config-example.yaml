@@ -1,0 +1,32 @@
+# JIIA (Jira Intelligent Issue Analyst) Configuration
+
+jira:
+  base_url: "https://your-domain.atlassian.net"
+  auth_type: "token"
+  email: "jiia_bridge@example.com"
+  api_token: "YOUR_JIRA_API_TOKEN"
+  api_version: "auto"
+
+ai:
+  provider: "gemini"    # gemini, openai, claude 등
+  api_key: "YOUR_AI_API_KEY"
+  model: ""             # 비워두면 provider의 기본 모델 사용
+
+jiia:
+  # 폴링 간격 (초)
+  polling_interval: 60
+  
+  # Handoff 시 할당될 SW 엔지니어
+  handoff_assignee_account_id: "SW_ENGINEER_ACCOUNT_ID"
+
+  # JIIA 담당자 (자신을 필터링하기 위함)
+  jiia_account_id: "JIIA_ACCOUNT_ID"
+  
+  # 상태 식별용 레이블 설정 (Dry-run 등 디버깅 시 필요에 따라 변경 가능)
+  labels:
+    waiting: "jiia-status-waiting"
+    analyzed: "jiia-status-analyzed"
+
+logging:
+  level: "INFO"
+  dir: "logs"

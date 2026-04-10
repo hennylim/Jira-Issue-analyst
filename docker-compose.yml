@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  jiia-agent:
+    build: .
+    image: jiia-agent:latest
+    container_name: jiia_agent
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./logs:/app/logs
+    restart: unless-stopped
+    # dry-run으로 실행하고 싶다면 command 오버라이드:
+    # command: ["python", "jiia_main.py", "--config", "config.yaml", "--dry-run"]

@@ -1,0 +1,111 @@
+################################################################################
+# JIRA CLI 설정 파일
+# 민감 정보는 환경변수(JIRA_API_TOKEN, JIRA_EMAIL) 사용 권장
+################################################################################
+
+jira:
+  # JIRA 서버 URL (Cloud: https://your-domain.atlassian.net, Server: http://your-server)
+  base_url: "https://your-domain.atlassian.net"
+
+  # 인증 방식: "token" (API Token) | "pat" (Personal Access Token) | "basic" (ID/PW)
+  auth_type: "token"
+
+  # Cloud: email + API Token
+  email: "your-email@example.com"
+  api_token: ""  # 또는 환경변수 JIRA_API_TOKEN 사용
+
+  # Server/Data Center: PAT 방식
+  # pat: ""  # 또는 환경변수 JIRA_PAT 사용
+
+  # API 버전: "auto" | "2" | "3"
+  # auto: 서버에 접속하여 자동으로 버전 감지
+  api_version: "auto"
+
+  # 요청 타임아웃 (초)
+  timeout: 30
+
+  # SSL 검증 (서버 환경에서 false로 설정 가능)
+  verify_ssl: true
+
+  # 최대 재시도 횟수
+  max_retries: 3
+
+
+################################################################################
+# 프로젝트 및 이슈 기본값 설정
+################################################################################
+defaults:
+  # 기본 프로젝트 키 (명령어에서 -p 생략 시 사용)
+  project_key: "MYPROJECT"
+
+  # 기본 이슈 유형
+  issue_type: "Task"
+
+  # 기본 우선순위
+  priority: "Medium"
+
+  # 이슈 조회 기본 최대 건수
+  max_results: 50
+
+  # 기본 필드 (이슈 조회 시 포함할 필드)
+  fields:
+    - "summary"
+    - "status"
+    - "assignee"
+    - "priority"
+    - "created"
+    - "updated"
+    - "labels"
+    - "comment"
+
+
+################################################################################
+# 상태 전환 매핑 (Workflow 별 커스터마이징)
+# 형식: "원하는 상태명": ["가능한 전환 이름 목록"]
+################################################################################
+transitions:
+  todo: ["To Do", "Open", "Backlog"]
+  in_progress: ["In Progress", "Start Progress", "진행 중"]
+  in_review: ["In Review", "Code Review", "리뷰 중"]
+  done: ["Done", "Resolve Issue", "Close Issue", "완료"]
+  blocked: ["Blocked", "블로킹"]
+
+
+################################################################################
+# 로그 설정
+################################################################################
+logging:
+  # 로그 레벨: DEBUG | INFO | WARNING | ERROR | CRITICAL
+  level: "INFO"
+
+  # 로그 파일 저장 경로
+  log_dir: "logs"
+
+  # 로그 파일명 패턴 (날짜 자동 포함)
+  log_file: "jira_cli_{date}.log"
+
+  # 로그 파일 최대 크기 (MB)
+  max_size_mb: 10
+
+  # 보관할 로그 파일 최대 개수
+  backup_count: 7
+
+  # 콘솔 출력 여부
+  console_output: true
+
+  # 로그 포맷
+  format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+
+
+################################################################################
+# CLI 출력 설정
+################################################################################
+output:
+  # 기본 출력 형식: "table" | "json" | "yaml" | "simple"
+  format: "table"
+
+  # 컬러 출력 여부
+  color: true
+
+  # 날짜 표시 형식
+  date_format: "%Y-%m-%d %H:%M"
