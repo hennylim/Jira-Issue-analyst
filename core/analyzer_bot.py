@@ -2,6 +2,7 @@ import json
 import logging
 from typing import Dict, Any, Tuple
 from ai_chat import create_ai
+import os
 
 logger = logging.getLogger(__name__)
 
