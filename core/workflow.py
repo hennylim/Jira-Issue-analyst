@@ -75,7 +75,7 @@ class JIIAWorkflow:
         author_id = getattr(last_comment.author, 'accountId', getattr(last_comment.author, 'name', ''))
         
         if author_id != self.jiia_account_id:
-            logger.info(f"이슈 {issue.key}에 IOP 엔지니어의 새 코멘트가 달렸습니다. 추가 분석을 진행합니다.")
+            logger.info(f"이슈 {issue.key}에 IOP 엔지니어의 새 코멘트가 달렸습니다. 데이터를 재평가합니다.")
             
             # 모든 컨텍스트 취합
             context = f"본문: {issue.description}\n\n"
@@ -83,11 +83,18 @@ class JIIAWorkflow:
                 c_author = getattr(c.author, 'displayName', 'Unknown')
                 context += f"[{c_author}]: {c.body}\n"
                 
-            # 다시 스캔할지, 바로 종합분석할지 결정. 단순화를 위해 바로 종합분석 후 결과 출력.
-            self._do_comprehensive_analysis(issue, context)
+            # 충분성 재평가
+            status, reason, question = self.analyzer.evaluate_sufficiency(context)
             
-            # waiting 레이블 제거가 필요하지만, Jira v3 edit API로 제거 가능 (jira_action에 remove_label 추가 가능)
-            # 여기서는 편의상 analyzed 레이블 추가 시 자동 필터링 되므로 스킵.
+            if status == "SUFFICIENT":
+                logger.info(f"이슈 {issue.key} 정보 충분함. 종합 분석을 진행합니다. (이유: {reason})")
+                self._do_comprehensive_analysis(issue, context)
+                # waiting 레이블은 종합 분석 후 analyzed 레이블과 교체되어야 하지만, 
+                # 여기서는 편의상 그대로 둡니다. 엄밀히 제거를 원하면 self.jira.remove_label()
+            else:
+                logger.info(f"이슈 {issue.key} 정보 아직 부족함. 추가 질문을 남깁니다. (이유: {reason})")
+                self.jira.add_comment(issue.key, f"안녕하세요, JIIA입니다.\n\n확인 감사합니다. 하지만 추가 분석을 위해 다음 사항이 더 필요합니다:\n\n{question}", dry_run=self.dry_run)
+                # 여전히 waiting 상태 유지
 
     def _do_comprehensive_analysis(self, issue, context: str):
         logger.info(f"종합 분석 시작: {issue.key}")
