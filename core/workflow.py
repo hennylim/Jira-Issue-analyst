@@ -53,14 +53,14 @@ class JIIAWorkflow:
     def _handle_new_issue(self, issue):
         logger.info(f"새 이슈 감지: {issue.key} - {issue.summary}")
         # 초기 스캔
-        status, reason, question = self.analyzer.initial_scan(issue.summary, issue.description or "")
+        status, reason, response_text = self.analyzer.initial_scan(issue.summary, issue.description or "")
         
         if status == "SUFFICIENT":
             logger.info(f"이슈 {issue.key} 정보 충분함. 종합 분석으로 넘어갑니다. (이유: {reason})")
             self._do_comprehensive_analysis(issue, issue.description or "")
         else:
             logger.info(f"이슈 {issue.key} 정보 부족함. IOP 엔지니어에게 질문을 남깁니다. (이유: {reason})")
-            self.jira.add_comment(issue.key, f"안녕하세요, JIIA(AI 분석가)입니다.\n\n정확한 분석을 위해 다음 정보가 추가로 필요합니다:\n\n{question}", dry_run=self.dry_run)
+            self.jira.add_comment(issue.key, f"안녕하세요, JIIA(AI 분석가)입니다.\n\n{response_text}", dry_run=self.dry_run)
             self.jira.add_label(issue.key, self.label_waiting, dry_run=self.dry_run)
 
     def _handle_waiting_issue(self, issue):
@@ -84,7 +84,7 @@ class JIIAWorkflow:
                 context += f"[{c_author}]: {c.body}\n"
                 
             # 충분성 재평가
-            status, reason, question = self.analyzer.evaluate_sufficiency(context)
+            status, reason, response_text = self.analyzer.evaluate_sufficiency(context)
             
             if status == "SUFFICIENT":
                 logger.info(f"이슈 {issue.key} 정보 충분함. 종합 분석을 진행합니다. (이유: {reason})")
@@ -92,8 +92,8 @@ class JIIAWorkflow:
                 # waiting 레이블은 종합 분석 후 analyzed 레이블과 교체되어야 하지만, 
                 # 여기서는 편의상 그대로 둡니다. 엄밀히 제거를 원하면 self.jira.remove_label()
             else:
-                logger.info(f"이슈 {issue.key} 정보 아직 부족함. 추가 질문을 남깁니다. (이유: {reason})")
-                self.jira.add_comment(issue.key, f"안녕하세요, JIIA입니다.\n\n확인 감사합니다. 하지만 추가 분석을 위해 다음 사항이 더 필요합니다:\n\n{question}", dry_run=self.dry_run)
+                logger.info(f"이슈 {issue.key} 정보 아직 부족 또는 답변 진행함. 코멘트를 남깁니다. (이유: {reason})")
+                self.jira.add_comment(issue.key, f"안녕하세요, JIIA입니다.\n\n{response_text}", dry_run=self.dry_run)
                 # 여전히 waiting 상태 유지
 
     def _do_comprehensive_analysis(self, issue, context: str):

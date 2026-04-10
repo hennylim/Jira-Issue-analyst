@@ -8,15 +8,19 @@ logger = logging.getLogger(__name__)
 
 # 프롬프트 정의
 INITIAL_SCAN_PROMPT = """\
-당신은 'JIIA(Jira Intelligent Issue Analyst)' 입니다. SW 엔지니어와 외부 필드(IOP) 엔지니어 사이를 조율하는 역할을 합니다.
-제출된 이슈(본문 및 코멘트 등 대화 내역)를 읽고, 내부 SW 엔지니어가 이슈를 파악하고 원인을 분석하기에 충분한 데이터(로그, 재현경로, 스크린샷 텍스트, 구성 정보 등)가 있는지 판단하세요.
-만약 정보가 부족하다면, IOP 엔지니어에게 구체적으로 어떤 추가 정보를 요청할지 질문을 작성하세요.
+당신은 'JIIA(Jira Intelligent Issue Analyst)' 입니다. SW 엔지니어와 외부 필드(IOP) 엔지니어 사이를 조율하며 문제 분석을 돕는 대화형 AI입니다.
+제출된 이슈(본문 및 코멘트 등 대화 내역)를 주의 깊게 읽고, 내부 SW 엔지니어가 이슈를 파악하고 원인을 분석하기에 충분한 데이터(로그, 재현경로, 스크린샷 텍스트, 환경 등)가 수집되었는지 판단하세요.
 
-출력은 반드시 유효한 JSON 형식이어야 합니다. 다른 말은 절대 추가하지 마세요.
+중요한 대화 원칙:
+1. IOP 엔지니어가 대화 중 JIIA(당신)에게 질문이나 요청(예: "어떤 로그가 필요한가요?", "어떻게 추출하나요?")을 했다면, 가장 먼저 그에 대한 답변을 친절하게 제공하세요.
+2. 분석을 위해 정보가 여전히 부족하다면, IOP 엔지니어에게 어떤 정보가 상세히 필요한지 명확히 요청하세요. (이 경우 상태는 "INSUFFICIENT" 입니다)
+3. 문제를 분석하기에 충분한 정보가 모두 모였다고 확신한다면 상태를 "SUFFICIENT"로 지정하세요.
+
+출력은 반드시 유효한 JSON 형식이어야 합니다. 다른 말은 절대 문장으로 추가하지 마세요.
 {
   "status": "SUFFICIENT" 또는 "INSUFFICIENT",
-  "reason": "왜 그렇게 판단했는지 짧은 이유",
-  "questions_for_iop": "INSUFFICIENT일 경우, IOP 엔지니어에게 물어볼 친절한 질문 내용(마크다운 코멘트 형식). SUFFICIENT일 경우 빈 문자열."
+  "reason": "왜 그렇게 판단했는지 내부 로직용 짧은 사유",
+  "response_to_iop": "INSUFFICIENT일 경우, IOP의 질문에 대한 답변과 추가 요청 사항을 모두 포함한 자연스러운 대답(마크다운 코멘트 형식). SUFFICIENT일 경우 빈 문자열."
 }
 """
 
@@ -82,7 +86,7 @@ class AnalyzerBot:
                 answer = answer[:-3]
                 
             data = json.loads(answer.strip())
-            return data.get("status", "INSUFFICIENT"), data.get("reason", ""), data.get("questions_for_iop", "")
+            return data.get("status", "INSUFFICIENT"), data.get("reason", ""), data.get("response_to_iop", "")
         except Exception as e:
             logger.error(f"초기 스캔 AI 분석 실패: {e}")
             return "INSUFFICIENT", "AI 분석 오류", "현재 이슈를 분석하는 중 오류가 발생했습니다. 로그를 다시 확인해주시겠습니까?"
@@ -101,7 +105,7 @@ class AnalyzerBot:
             if answer.endswith("```"): answer = answer[:-3]
                 
             data = json.loads(answer.strip())
-            return data.get("status", "INSUFFICIENT"), data.get("reason", ""), data.get("questions_for_iop", "")
+            return data.get("status", "INSUFFICIENT"), data.get("reason", ""), data.get("response_to_iop", "")
         except Exception as e:
             logger.error(f"추가 스캔 AI 분석 실패: {e}")
             return "INSUFFICIENT", "AI 분석 오류", "분석 중 오류가 발생했습니다. 잠시 후 답변해주시겠습니까?"
