@@ -41,6 +41,13 @@ class JIIAWorkflow:
     def process_tickets(self):
         # 자신이 담당자인 이슈만 가져오기
         jql = f'assignee = currentUser() AND status in ("To Do", "Open", "In Progress") AND labels != {self.label_analyzed}'
+        
+        target_projects = self.jiia_cfg.get("target_projects", [])
+        if target_projects:
+            if isinstance(target_projects, list) and len(target_projects) > 0:
+                projects_str = ", ".join(f'"{p}"' for p in target_projects)
+                jql += f' AND project in ({projects_str})'
+        
         issues = self.jira.search_issues(jql)
         
         for issue in issues:

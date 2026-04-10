@@ -16,6 +16,10 @@ jiia:
   # 폴링 간격 (초)
   polling_interval: 60
   
+  # 감지할 프로젝트 키 목록 (비워두거나 없으면 모든 프로젝트 감지)
+  # 예시: ["PROJ1", "PROJ2"]
+  target_projects: []
+  
   # Handoff 시 할당될 SW 엔지니어
   handoff_assignee_account_id: "SW_ENGINEER_ACCOUNT_ID"
 
